@@ -1,0 +1,20 @@
+// Packager.oak
+// Compiles comments or config files for deps and such for Oak.
+
+TEMP_NODE_PACKAGER := import('regex.node')
+
+fn CDoc(text) {
+
+	_main := ?
+	_returns := ?
+
+	// @
+
+}
+
+fn run {
+	self := {}
+
+	// @ Returns
+	{}
+}

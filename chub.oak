@@ -1,0 +1,57 @@
+std := import('std')
+str := import('str')
+node := import('spclib/node')
+
+nodejs := node.Node()
+
+downloadCHUBML := req({
+	method: 'GET'
+	url: 'https://chubml-cml.spcfork.repl.co/cml.js'
+	body: ''
+	headers: {}
+})
+
+Todo := {
+	CHUBWFetch: ?
+	CHUBstrprep: ?
+	CHUBunmess: ?
+	CHUBduper: ?
+	CHUBfax: ?
+	CHUBECSS: ?
+	CHUBduper: ?
+	CHUBsanitize: ?
+	ChubRep: ?
+}
+
+/////////////////////
+// ** IMPORTANT ** //
+/////////////////////
+
+fn getCHUBMLsrc {
+	downloadCHUBML
+}
+
+fn getCHUBMLurl {
+	'https://chubml-cml.spcfork.repl.co/cml.js'
+}
+
+/////////////////////
+
+fn CHUBparse(string, endr) {
+	string := string |> std.default('')
+
+	string := str.replace(string, '`', '\'')
+	string := str.replace(string, '|mult|', '\\\`')
+
+	string := nodejs.run(getCHUBMLsrc().resp.body << '
+    \n\n\n
+    // OAK WRAPPER
+    console.log(CHUBparse(`' << string << ' `))
+	').res.(0).stdout
+
+	if type(endr) {
+		:function -> {
+			endr(string, getCHUBMLsrc().resp.body)
+		}
+	}
+}

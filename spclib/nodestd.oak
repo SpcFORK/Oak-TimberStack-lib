@@ -1,0 +1,22 @@
+// Node Standard
+
+nodejs := import('node')
+packer := import('packager')
+spcstd := import('spcstd')
+fs := import('fs')
+
+node := nodejs.Node()
+
+fn prettyPrintJSON(json) {
+	if a := fs.readFile('spclib/oakmod.js') {
+		_ -> {
+			print(string(a))
+		}
+	}
+
+	node.run(a << '\n\n\n prettyPrintJSON(`' << string(json) << '`)').res.(0) |>
+		print()
+
+}
+
+// - SpcFORK

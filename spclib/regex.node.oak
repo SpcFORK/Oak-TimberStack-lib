@@ -1,0 +1,68 @@
+// Regex.node
+
+std := import('std')
+str := import('str')
+nodejs := import('node')
+spcstd := import('spcstd')
+
+node := nodejs.Node()
+
+fn match(stri, a, opts) {
+
+	stri := stri |> std.default('')
+	a := a |> std.default('')
+	opts := opts |> std.default('')
+
+	errFLAG := false
+
+	__Returns := ?
+
+	if type(stri) {
+		? -> {
+			errFLAG <- true
+			std.println('ERROR:  You can\'t use an empty string.')
+		}
+
+		:object -> {
+			errFLAG <- true
+			std.println(' ERROR: You can\' t use an Object.')
+		}
+
+		:array -> {
+			errFLAG <- true
+			std.println(' ERROR: You can\' t use an Array.')
+		}
+	}
+
+	flag := '/' << std.identity(a) << '/' << std.identity(opts) << ';'
+
+	if !errFLAG {
+		true -> {
+			__Returns <- ' // JS code goes here.
+
+      	let lookfor = ' << std.identity(flag) << '
+      
+      	let res;
+      
+      	res = lookfor.exec("' << std.identity(stri) << '")
+      
+      	console.log(res) ;
+      
+      	'
+
+			__Returns <- __Returns |>
+				str.trim() |>
+				node.run()
+
+			__Returns <- __Returns.res.(0).stdout
+
+			// We have a string and not an Array.
+			// We must fix.
+
+			__Returns <- __Returns |> spcstd.arrStringToArray()
+
+		}
+	}
+
+	{ __Returns }
+}

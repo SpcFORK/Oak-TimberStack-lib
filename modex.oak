@@ -1,0 +1,20 @@
+std := import('std')
+
+fs := import('fs')
+
+fn mod(str) {
+	print('
+/**********************
+*    MODEX  MODULE    *
+*    MODEL  FORMS!    *
+*     - Spcfork       *
+**********************/
+  \n')
+
+	with fs.readFile() fn(file) if file {
+		? -> std.println('Could not read file!')
+		_ -> print(file)
+	}
+
+
+}

@@ -1,0 +1,30 @@
+// Node Module struct
+
+std := import('std')
+str := import('str')
+fmt := import('fmt')
+// chub := import('chub')
+node := import('spclib/node')
+nodestd := import('spclib/nodestd')
+
+scr := node.Node()
+
+dam := scr.run('
+
+
+
+')
+
+// Must be added
+dam.res.(0).stdout |> print()
+
+dam.res.
+	(0).stdout |>
+	std.default('') |>
+	str.trim() |>
+	std.println()
+
+dam.res.
+	(0).stderr |>
+	str.trim() |>
+	std.println()

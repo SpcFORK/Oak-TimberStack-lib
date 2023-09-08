@@ -1,0 +1,181 @@
+// EVENTS!
+
+fmt := import('fmt')
+http := import('http')
+
+std := import('std')
+rec := import('rec')
+
+callbacks := {}
+
+fn Events {
+	self := []
+
+	fn emit(PKN, PKD) {
+		print('wow' << string(PKN) << string(PKD))
+
+		isin := std.contains?(callbacks, PKN)
+
+		if isin {
+			true -> {
+				std.range(0, len(callbacks.(PKN)) - 1) |>
+
+				std.each(fn(o) {
+					callbacks.(PKN).(o).event |> string() |> print()
+					if callbacks.(PKN).(o).event {
+						:function -> {
+							callbacks.(PKN).(o).event(PKD)
+						}
+					}
+
+				})
+
+			}
+
+		}
+
+	}
+
+	fn on(PKN, PKCB) {
+		if callbacks.(PKN) {
+			{ packetName: PKN, event: PKCB } -> {}
+			? -> callbacks.(PKN).(0) := {
+				callbacks.(PKN) := callbacks.(PKN) |> std.default([])
+
+				callbacks.(PKN) << {
+					packetName: PKN
+					event: PKCB
+				}
+			}
+		}
+
+		// on(PKN, PKCB)
+
+	}
+
+	{
+		on: on
+		emit: emit
+	}
+}
+
+fn WANEvents {
+	self := []
+	HOME := ?
+	EXISTS := ?
+
+	Port := 3000
+
+	fn setPort(port) Port <- port
+
+	server := http.Server()
+
+	fn addRoute(stri, cb) {
+		server.route(stri, cb)
+	}
+
+	with addRoute('/def/:name') fn(params) fn(req, end) if req.method {
+		'GET' -> end({
+			status: 200
+			body: fmt.format('Hello, {{ 0 }}!', std.default(params.name, 'World'))
+		})
+		_ -> end(http.MethodNotAllowed)
+	}
+
+	with server.route('/*staticPath') fn(params) {
+		http.handleStatic('./' + params.staticPath)
+	}
+
+
+	//with server.route('/') fn(params) fn(req, end) if req.method {
+	//	'GET' -> {
+	//		asd.emit('get', {
+	//			home: :index
+	//		})
+	//
+	//		end({
+	//			status: 200
+	//			body: 'Welcome to Oak!'
+	//		})
+	//	}
+	//	_ -> end(http.MethodNotAllowed)
+	//}
+
+	// start server
+	server.start(Port)
+	fmt.printf('Static server running at port {{ 0 }}', Port)
+
+
+	fn setHome(txt) {
+
+		if EXISTS {
+			true -> {
+				std.println('WTH!!!')
+			}
+
+			? -> {
+				HOME <- string(txt)
+			}
+		}
+	}
+
+	fn emit(PKN, PKD) {
+		print('wow' << string(PKN) << string(PKD))
+
+		isin := std.contains?(callbacks, PKN)
+
+		if isin {
+			true -> {
+				std.range(0, len(callbacks.(PKN)) - 1) |>
+
+				std.each(fn(o) {
+
+					if callbacks.(PKN).(o).event {
+						:function -> {
+							req([{
+								url: req(string(HOME))
+								method: 'GET'
+								body: {}
+								headers: {}
+							}])
+							callbacks.(PKN).(o).event(PKD)
+						}
+					}
+
+				})
+
+			}
+
+		}
+
+	}
+
+	fn on(PKN, PKCB) {
+		if callbacks.(PKN) {
+			{ packetName: PKN, event: PKCB } -> {}
+			? -> callbacks.(PKN).(0) := {
+				callbacks.(PKN) := callbacks.(PKN) |> std.default([])
+
+				callbacks.(PKN) << {
+					packetName: PKN
+					event: PKCB
+				}
+			}
+		}
+
+		// on(PKN, PKCB)
+
+	}
+
+	{
+		setHome: setHome
+		on: on
+		emit: emit
+	}
+}
+
+// Rn Im trying to make it create a server to recieve reqs because for some reason only the listen funct is theaded.
+
+// so I'll send reqs for events to a port but the reqs are funny.
+
+// -SpcFORK

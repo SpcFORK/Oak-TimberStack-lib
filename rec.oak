@@ -1,0 +1,39 @@
+std := import('std')
+nodestd := import('spclib/nodestd')
+
+tick := 0
+
+plexifunct := ?
+
+fn clock(a, d) {
+	wait(0.001)
+	// print(string(tick))
+	tick <- tick + 1
+
+	// type(fn() {}) |> string() |> print()
+
+	if type(plexifunct) {
+		:function -> {
+			plexifunct()
+			print('pl')
+		}
+	}
+
+	// clock()
+
+}
+
+fn est(ty) {
+	ty |> std.default(fn {})
+	plexifunct <- ty
+}
+
+
+est(fn {
+
+	print(string(tick) << '\n')
+
+})
+clock()
+
+

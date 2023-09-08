@@ -1,0 +1,64 @@
+std := import('std')
+str := import('str')
+path := import('path')
+fs := import('fs')
+fmt := import('fmt')
+json := import('json')
+
+__MAINLOC := ''
+
+fn atomType(path) {
+
+	fn setMN(a) {
+		__MAINLOC <- string(a)
+	}
+
+	fn load() {
+
+		atomDir := fs.readFile(__MAINLOC)
+
+		if atomDir {
+			_ -> {
+				print(atomDir)
+			}
+		}
+	}
+
+	{
+		set: setMN
+	}
+}
+
+fn arrStringToArray(sarr) {
+
+	objconstr := sarr
+
+	objconstr := objconstr |>
+		std.slice(1, len(objconstr) - 2) |>
+		str.trim()
+
+	_Carr := objconstr |> str.split(', ')
+
+	with std.each(_Carr) fn(arg, i) {
+		if arg |> str.startsWith?('\'') & arg |> str.endsWith?('\'') {
+			true -> {
+				_Carr.(i) <- _Carr.(i) |> std.slice(1, len(_Carr.(i)) - 1)
+			}
+		}
+	}
+
+	if type(_Carr) {
+		:array -> {
+			if len(_Carr) <= 1 {
+				true -> {
+					_Carr <- _Carr.0
+				}
+			}
+		}
+	}
+
+	{ _Carr }
+
+}
+
+// Ima do a fstring funct later

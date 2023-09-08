@@ -1,0 +1,228 @@
+fs := import('fs')
+std := import('std')
+str := import('str')
+json := import('json')
+http := import('http')
+
+_GLOBALINITENV := ?
+
+// const replitDBFilename = "/tmp/replitdb"
+replitDBFilename := '/tmp/replitdb'
+
+fn init(reqarr) {
+
+	_env := env()
+
+	res := {
+		REPLIT_DB_URL: _env.REPLIT_DB_URL
+		HOME: _env.HOME
+		HOSTNAME: _env.HOSTNAME
+		PATH: _env.PATH
+		REPLIT_CLUSTER: _env.REPLIT_CLUSTER
+		REPL_OWNER: _env.REPL_OWNER
+		REPL_IMAGE: _env.REPL_IMAGE
+		REPL_SLUG: _env.REPL_SLUG
+		LANG: _env.LANG
+		HOME: _env.HOME
+		FLAG_MULTIPLE_PORTS: _env.FLAG_MULTIPLE_PORTS
+		HOSTNAME: _env.HOSTNAME
+		REPLIT_ENVIRONMENT: _env.REPLIT_ENVIRONMENT
+		SYSTEM: _env.system
+	}
+
+	// Get any keys newly added or missed.
+	keys(_env) |> with std.each() fn(prop) {
+
+		if str.contains?(prop, 'REPL') {
+			true -> {
+				res.(prop) := _env.(prop)
+			}
+		}
+
+	}
+
+	// @Returns
+	{ res }
+
+}
+
+fn getKey() {
+
+	// ** IMPORTANT:  Replit devs req for a new token every hour.
+	// ** This is threaded, so we'll have to check manually.
+
+	_gotkey := fs.readFile(replitDBFilename)
+
+	if _gotkey {
+		? -> {
+			_gotkey <- init().REPLIT_DB_URL
+		}
+	}
+
+	_gotkey
+}
+
+fn DBClient(key) {
+
+	// ** Initiates the DB Class
+
+	//////////////////////////////////
+	// IMPORTANT
+	//////////////////////////////////
+
+	_key := key |> std.default(getKey())
+
+	fn get(path, options) {
+
+		_path := std.clone(path) |> std.default('')
+		_option_keys := keys(options)
+
+		response := req({
+			url: std.clone(_key) << '/' << _path
+		})
+
+		// The Return value
+		endResult := ?
+		bodyExists? := false
+		close? := false
+
+		if response.resp.body {
+			_ -> bodyExists? <- true
+			'' -> {
+				bodyExists? <- false
+				close? <- true
+			}
+		}
+
+		if bodyExists? {
+			true -> {
+
+				if type(_option_keys) {
+					:object -> {
+						if _option_keys |> std.contains?('raw') {
+							true -> {
+								close? <- true
+								endResult <- response.resp.body
+							}
+						}
+
+					}
+				}
+
+				fn handleClose(funct) if !close? {
+					true -> {
+						funct()
+					}
+				}
+
+				gotJSON? := std.clone(response.resp.body)
+
+				with handleClose() fn {
+					if bodyExists? {
+						true -> {
+							gotJSON? <- json.parse(response.resp.body)
+						}
+
+						false -> {
+							std.println('Failed to parse value of ' << std.clone(_key) << ', try passing a raw option to get the raw value')
+						}
+					}
+
+					close? <- true
+				}
+
+				if gotJSON? {
+					? -> { endResult <- ? }
+					_ -> { endResult <- gotJSON? }
+				}
+
+				// @ Returns!
+				gotJSON?
+
+			}
+		}
+
+	}
+
+	//////////////////////////////////
+
+	// ** Functions outside dev use
+	fn set(key, val) {
+
+		strValue := val |> json.serialize()
+
+		_response := req({
+			method: 'POST'
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			}
+			url: std.clone(_key)
+			body: http.percentEncode(key) << '=' << http.percentEncode(strValue)
+		})
+
+		{ _response }
+
+	}
+
+	fn delete(key) {
+		_del_request := req({
+			url: std.clone(_key) << '/' << string(key)
+			method: 'DELETE'
+		})
+	}
+
+	fn list(prefix) {
+
+		_prefix := prefix |> std.default('')
+
+		_listresp := req({
+			method: 'GET'
+			url: std.clone(_key) << '?encode=true&prefix=' << http.percentEncode(key)
+		})
+
+		return := ?
+		if len(_listresp.resp.body) = 0 {
+			true -> {
+				return <- []
+			}
+
+			false -> {
+				return <- _listresp.resp.body |>
+					str.split('\n')
+
+				return <- return |>
+					with std.each() fn(item, index) {
+					return.(index) := return.(index) |> http.percentEncode()
+				}
+			}
+		}
+
+		return
+	}
+
+	// ""Dynamic Functions"" ???
+
+	fn empty() {
+		request_bucket := []
+
+		_listed := list() |>
+			with std.each() fn(property) {
+			delete(property)
+		}
+
+		request_bucket
+	}
+
+	// @ Returns
+	{
+		key: _key
+		get: get
+		set: set
+		delete: delete
+		list: list
+		empty: empty
+	}
+
+}
+
+dfo := DBClient()

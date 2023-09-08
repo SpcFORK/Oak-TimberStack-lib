@@ -1,0 +1,35 @@
+std := import('std')
+fmt := import('fmt')
+http := import('http')
+r := import('spclib/replit/replit')
+
+repl := r.DBClient()
+
+// res1 := repl.set('account', 'yeah') |>
+	// string()
+
+// print(res1 << '\n')
+
+// res2 := repl.get('account') |>
+	// string()
+
+// print(res2 << '\n')
+
+// repl.delete('account') |> string() |> print()
+
+// print(stat('main.oak'))
+
+
+server := http.Server()
+with server.route('/:name') fn(params) {
+	fn(req, end) if req.method {
+		'GET' -> end({
+			status: 200
+			body: fmt.format('Hello, {{ 0 }}!'
+				std.default(params.name, 'World'))
+		})
+		_ -> end(http.MethodNotAllowed)
+	}
+}
+
+server.start(3000)

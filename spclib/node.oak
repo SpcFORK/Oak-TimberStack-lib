@@ -1,0 +1,141 @@
+std := import('std')
+
+fn Node {
+	// Was going to save them, but here is fine...
+	// I've decided that if I seperate it, it will be grosser
+	programs := {
+		wow: []
+	}
+
+	fn flag(flagv, callb) {
+		if flagv {
+			true -> {
+
+				if type(callb) {
+					:function -> {
+						callb(flagv, callb)
+					}
+				}
+
+			}
+
+		}
+
+		{
+			false
+		}
+	}
+
+	fn execNodeCMD(opts, execDone) {
+
+		continue := true
+
+		if opts.modules {
+			? -> {
+				continue <- false
+				std.println('Err: No modules.')
+			}
+		}
+
+		if len(opts.modules) < 1 {
+			true -> {
+				continue <- false
+				std.println('Err: Not enough modules.')
+			}
+		}
+
+		// opts.modules := opts.modules |> std.default([''])
+
+		result := []
+		lastRes := ?
+
+		continue := with flag(continue) fn(f, c) {
+			with std.each(opts.modules) fn(module, index) {
+				module.args := module.args |> std.default([])
+				module.input := module.input |> std.default('')
+
+				lastRes <- std.exec('node', module.args, module.input)
+				result << lastRes
+
+				if lastRes.stderr != '' {
+					true -> {
+						print(lastRes.stderr)
+					}
+				}
+
+				if type(execDone) {
+					:function -> {
+						execDone(lastRes)
+					}
+				}
+
+			}
+
+		}
+
+		// @Returns
+		{ result }
+	}
+
+	fn run(txt) {
+
+		return := []
+		a := execNodeCMD({
+			modules: [
+				{
+					args: []
+					input: txt
+				}
+			]
+		})
+
+		return := return << a.0
+
+		fn _run(_txt) {
+			_a := execNodeCMD({
+				modules: [
+					{
+						args: []
+						input: _txt
+					}
+				]
+			})
+
+			return := return << _a.0
+
+			// @Returns
+			{
+				res: return
+				run: _run
+			}
+		}
+
+		// @Returns
+		{
+			res: return
+			run: _run
+		}
+	}
+
+	fn load(fileName, input) {
+
+		execNodeCMD({
+			modules: [
+				{
+					args: [fileName]
+					input: input
+				}
+			]
+		})
+
+	}
+
+	return := {
+		execNodeCMD: execNodeCMD
+		run: run
+		load: load
+	}
+
+	// @Returns
+	{ return }
+}
