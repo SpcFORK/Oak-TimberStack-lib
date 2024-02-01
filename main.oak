@@ -5,19 +5,19 @@ r := import('spclib/replit/replit')
 
 repl := r.DBClient()
 
-// res1 := repl.set('account', 'yeah') |>
-	// string()
+res1 := repl.set('account', 'yeah') |>
+	string()
 
-// print(res1 << '\n')
+print(res1 << '\n')
 
-// res2 := repl.get('account') |>
-	// string()
+res2 := repl.get('account') |>
+	string()
 
-// print(res2 << '\n')
+print(res2 << '\n')
 
-// repl.delete('account') |> string() |> print()
+repl.delete('account') |> string() |> print()
 
-// print(stat('main.oak'))
+print(stat('main.oak'))
 
 
 server := http.Server()

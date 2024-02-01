@@ -60,5 +60,3 @@ fn arrStringToArray(sarr) {
 	{ _Carr }
 
 }
-
-// Ima do a fstring funct later
